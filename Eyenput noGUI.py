@@ -3,6 +3,7 @@ import dlib
 from imutils import face_utils
 from math import hypot
 import numpy as np
+from scipy.spatial import distance
 
 
 def midpoint(p1, p2):
@@ -24,6 +25,13 @@ def get_bounds(region):
     max_y = np.max(region[:,1])
     return min_x, min_y, max_x, max_y
 
+def eye_aspect_ratio(eyes_dots):
+    A = distance.euclidean(eyes_dots[1,:], eyes_dots[5,:])
+    B = distance.euclidean(eyes_dots[2,:], eyes_dots[4,:])
+    C = distance.euclidean(eyes_dots[0,:], eyes_dots[3,:])
+    ear = (A + B) / (2.0 * C)
+    return ear
+
 def nothing(x):
     pass
     
@@ -36,6 +44,10 @@ def main():
     cap = cv2.VideoCapture(0)
     cv2.namedWindow('Live')
     cv2.createTrackbar('threshold', 'Live', 0, 255, nothing)
+    counter = 0
+    ear_thres = 0.36
+    frames_per_blink = 5
+
     while True:
         _, frame = cap.read()
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -48,16 +60,25 @@ def main():
             face = face_utils.shape_to_np(landmarks)
             left_eye_dots = face[36:42]
             right_eye_dots = face[42:48]
-            left_eye_top, left_eye_bot, ratio_left = get_ratio(left_eye_dots)
-            right_eye_top, right_eye_bot, ratio_right = get_ratio(right_eye_dots)
+            #left_eye_top, left_eye_bot, ratio_left = get_ratio(left_eye_dots)
+            #right_eye_top, right_eye_bot, ratio_right = get_ratio(right_eye_dots)
             #cv2.line(frame, (left_eye_top[0], left_eye_top[1]), (left_eye_bot[0], left_eye_bot[1]), color=(0,255,0), thickness=1)
             #cv2.line(frame, (face[36,0], face[36,1]), (face[39,0], face[39,1]), color=(0,255,0), thickness=1)
             #cv2.line(frame, (right_eye_top[0], right_eye_top[1]), (right_eye_bot[0], right_eye_bot[1]), color=(0,255,0), thickness=1)
             #cv2.line(frame, (face[42,0], face[42,1]), (face[45,0], face[45,1]), color=(0,255,0), thickness=1)
-            aggr = (ratio_left+ratio_right) / 2
-            if aggr >= 18.755:
-                blink = blink+1
-                cv2.putText(frame, 'Blinking'.format(blink), (50,100), font, 1, (255,0,0))
+            ##if aggr >= 18.755:
+                #blink = blink+1
+                #cv2.putText(frame, 'Blinking'.format(blink), (50,100), font, 1, (255,0,0))
+            left_ear = eye_aspect_ratio(left_eye_dots)
+            right_ear = eye_aspect_ratio(right_eye_dots)
+            aggr_ear = left_ear + right_ear / 2
+            if aggr_ear < ear_thres :
+                counter += 1
+            if counter >= frames_per_blink:
+                blink += 1
+                counter = 0
+            cv2.putText(frame, 'Blink: {}'.format(blink), (50,100), font, 1, (255,0,0))  
+
             
         # gaze detection
         left_eye_region = np.array([(landmarks.part(36).x, landmarks.part(36).y),
@@ -106,4 +127,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
