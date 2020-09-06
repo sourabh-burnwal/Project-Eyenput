@@ -13,6 +13,7 @@ class mainclass(QMainWindow):
     def __init__(self):
         super(mainclass, self).__init__()
         loadUi(r"C:\Users\soura\Desktop\project eyenput\TheEyenput.ui", self)
+        self.setWindowIcon(QtGui.QIcon(r"C:\Users\soura\Desktop\project eyenput\logo.png"))
         self.pb_start.clicked.connect(self.startVideo)
         self.pb_stop.clicked.connect(self.stopVideo)
         self.pb_track_left_eye.clicked.connect(self.blob_detection_left)
