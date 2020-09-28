@@ -9,6 +9,10 @@
   - Head pose estimation
   - Personalization of the software according to a particular user
   
+### Final codes:
+  - Eyenput GUI.py (The GUI code)
+  - eyenput_process.py (The back-end code)
+  
 ### Progress:
   - Appliation interface designing
   - Dlib's 68 landmarks detector has been used to filter out the eyeball
